@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/JinFuuMugen/ya_gophermart.git/internal/auth"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/config"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/handlers"
@@ -32,12 +31,14 @@ func main() {
 	rout := chi.NewRouter()
 
 	rout.Route("/api/user", func(r chi.Router) {
-		r.With(auth.AuthMiddleware).Group(func(r chi.Router) { //TODO: make this middleware
-			r.Use(func(next http.Handler) http.Handler {
-				return logger.HandlerLogger(next)
-			})
-			r.Post("/register", handlers.RegisterHandler)             //TODO: make this handler
-			r.Post("/login", handlers.LoginHandler)                   //TODO: make this handler
+		r.Use(func(next http.Handler) http.Handler {
+			return logger.HandlerLogger(next)
+		})
+
+		r.Post("/register", handlers.RegisterHandler) //TODO: make this handler
+		r.Post("/login", handlers.LoginHandler)       //TODO: make this handler
+
+		r.With(handlers.AuthMiddleware).Group(func(r chi.Router) { //TODO: make this middleware
 			r.Post("/orders", handlers.PostOrdersHandler)             //TODO: make this handler
 			r.Get("/orders", handlers.GetOrdersHandler)               //TODO: make this handler
 			r.Get("/balance", handlers.GetBalanceHandler)             //TODO: make this handler
