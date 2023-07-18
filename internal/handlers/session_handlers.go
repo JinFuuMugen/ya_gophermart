@@ -112,10 +112,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var credentials struct {
-		Login    string `json:"login"`
-		Password string `json:"password"`
-	}
+	var credentials models.User
 
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {

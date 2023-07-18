@@ -38,7 +38,7 @@ func main() {
 		r.Post("/register", handlers.RegisterHandler) //TODO: make this handler
 		r.Post("/login", handlers.LoginHandler)       //TODO: make this handler
 
-		r.With(handlers.AuthMiddleware).Group(func(r chi.Router) { //TODO: make this middleware
+		r.With(handlers.AuthMiddleware).Group(func(r chi.Router) {
 			r.Post("/orders", handlers.PostOrdersHandler)             //TODO: make this handler
 			r.Get("/orders", handlers.GetOrdersHandler)               //TODO: make this handler
 			r.Get("/balance", handlers.GetBalanceHandler)             //TODO: make this handler
