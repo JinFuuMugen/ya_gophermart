@@ -12,7 +12,7 @@ import (
 
 var jwtSecret = []byte("gophermart")
 
-func generateAuthToken() (string, error) {
+func generateAuthToken(login string) (string, error) {
 
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -20,6 +20,7 @@ func generateAuthToken() (string, error) {
 
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims["exp"] = expirationTime.Unix()
+	claims["user"] = login
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
@@ -73,7 +74,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	//TODO: add user to database
 
-	token, err := generateAuthToken()
+	token, err := generateAuthToken(user.Login)
 	fmt.Println(token)
 	if err != nil {
 		logger.Errorf("failed to generate auth token: %v", err)
@@ -124,7 +125,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: check auth in database
 	// 401 (Unauthorized)
 
-	token, err := generateAuthToken()
+	token, err := generateAuthToken(credentials.Login)
 	if err != nil {
 		logger.Errorf("failed to generate auth token: %v", err)
 		http.Error(w, "Internal error", http.StatusInternalServerError)

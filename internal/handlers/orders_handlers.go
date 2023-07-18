@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
+	"github.com/dgrijalva/jwt-go"
 	"io"
 	"net/http"
 	"strconv"
@@ -9,7 +11,7 @@ import (
 )
 
 func GetOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "temp error", http.StatusNotFound)
+	http.Error(w, "temp error", http.StatusNotFound) //TODO: change
 }
 
 func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,11 +40,7 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		orderNumber = strings.ReplaceAll(orderNumber, " ", "")
 
 		_, err := strconv.ParseInt(orderNumber, 10, 64)
-		if err != nil {
-			return false
-		}
-
-		return true
+		return err == nil
 	}
 
 	if !isValidOrderNumber(string(orderNumber)) {
@@ -51,12 +49,33 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: db save
-	//saveOrderNumber()
-	//if err != nil {
-	//	http.Error(w, "failed to save order number", http.StatusInternalServerError)
-	//	return
-	//}
+	cookie, err := r.Cookie("auth_token")
+	if err != nil {
+		logger.Errorf("failed to get auth cookie: %v", err)
+		http.Error(w, "Failed to get auth cookie", http.StatusUnauthorized)
+		return
+	}
+
+	token := cookie.Value
+
+	claims := jwt.MapClaims{}
+	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+	if err != nil || !parsedToken.Valid {
+		logger.Errorf("invalid or expired auth token: %v", err)
+		http.Error(w, "Invalid or expired auth token", http.StatusUnauthorized)
+		return
+	}
+
+	username := claims["user"].(string)
+
+	err = database.StoreOrder(string(orderNumber), username)
+	if err != nil {
+		logger.Errorf("failed to store order")
+		http.Error(w, "Failed to save order number", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusAccepted)
 }
