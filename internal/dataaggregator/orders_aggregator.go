@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
-	"github.com/go-resty/resty/v2"
 	"io"
 	"net/http"
 )
@@ -15,20 +14,23 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting orders from database: %w", err)
 	}
-	r := resty.New()
+
+	client := http.Client{}
+
 	accrualOrder := make([]models.Order, 0)
 	for _, o := range orders {
-		resp, err := r.R().Get(addr + "/api/orders/" + o.Number)
+		resp, err := client.Get(addr + "/api/orders/" + o.Number)
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
+		defer resp.Body.Close()
 
-		body, err := io.ReadAll(resp.RawBody())
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("error reading response body: %w", err)
 		}
 
-		switch resp.StatusCode() {
+		switch resp.StatusCode {
 		case http.StatusOK:
 			var orderData models.Order
 			if err := json.Unmarshal(body, &orderData); err != nil {
@@ -37,10 +39,12 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 
 			orderData.Dateadd = o.Dateadd
 			accrualOrder = append(accrualOrder, orderData)
+			break
 
 		case http.StatusNoContent:
+			break
 		default:
-			return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode())
+			return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 		}
 	}
 	return accrualOrder, nil
