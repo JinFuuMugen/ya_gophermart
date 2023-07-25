@@ -16,16 +16,16 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 	}
 	r := resty.New()
 	for i, o := range orders {
-		resp, err := r.R().Get(addr + "/api/orders" + strconv.Itoa(o.Number))
+		resp, err := r.R().Get(addr + "/api/orders/" + strconv.Itoa(o.Number))
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
-		orderData := make([]models.Order, 0)
+		var orderData models.Order
 		if err := json.Unmarshal(resp.Body(), &orderData); err != nil {
 			return nil, fmt.Errorf("error parsing JSON: %w", err)
 		}
-		orders[i].Accrual = orderData[i].Accrual
-		orders[i].Status = orderData[i].Status
+		orders[i].Accrual = orderData.Accrual
+		orders[i].Status = orderData.Status
 	}
 	return orders, nil
 }
