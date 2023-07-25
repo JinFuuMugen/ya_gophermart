@@ -14,7 +14,8 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		return nil, fmt.Errorf("error getting orders from database: %w", err)
 	}
 	r := resty.New()
-	for i, o := range orders {
+	accuralOrder := make([]models.Order, 0)
+	for _, o := range orders {
 		resp, err := r.R().Get(addr + "/api/orders/" + o.Number)
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
@@ -23,8 +24,9 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		if err := json.Unmarshal(resp.Body(), &orderData); err != nil {
 			return nil, fmt.Errorf("error parsing JSON: %w", err)
 		}
-		orders[i].Accrual = orderData.Accrual
-		orders[i].Status = orderData.Status
+		fmt.Println(orderData) //TODO:remove
+
+		accuralOrder = append(accuralOrder, orderData)
 	}
 	return orders, nil
 }
