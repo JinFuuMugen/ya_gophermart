@@ -7,6 +7,7 @@ import (
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	"github.com/go-resty/resty/v2"
 	"io"
+	"net/http"
 )
 
 func GetOrders(user string, addr string) ([]models.Order, error) {
@@ -22,21 +23,25 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
 
-		var orderData models.Order
+		switch resp.StatusCode() {
+		case http.StatusOK:
+			body, err := io.ReadAll(resp.RawBody())
+			if err != nil {
+				return nil, fmt.Errorf("error reading response body: %w", err)
+			}
 
-		body, err := io.ReadAll(resp.RawBody())
-		if err != nil {
-			return nil, fmt.Errorf("error reading response body: %w", err)
+			var orderData models.Order
+			if err := json.Unmarshal(body, &orderData); err != nil {
+				return nil, fmt.Errorf("error parsing JSON: %w", err)
+			}
+
+			orderData.Dateadd = o.Dateadd
+			accrualOrder = append(accrualOrder, orderData)
+
+		case http.StatusNoContent:
+		default:
+			return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode())
 		}
-		fmt.Println(body) //todo: remove
-
-		if err := json.Unmarshal(body, &orderData); err != nil {
-			return nil, fmt.Errorf("error parsing JSON: %w", err)
-		}
-
-		orderData.Dateadd = o.Dateadd
-		accrualOrder = append(accrualOrder, orderData)
-
 	}
 	return accrualOrder, nil
 }
