@@ -39,10 +39,8 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 
 			orderData.Dateadd = o.Dateadd
 			accrualOrder = append(accrualOrder, orderData)
-			break
 
 		case http.StatusNoContent:
-			break
 		default:
 			return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 		}
