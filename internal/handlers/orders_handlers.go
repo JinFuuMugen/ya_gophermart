@@ -60,6 +60,7 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 			_, _ = w.Write(ordersJSON)
 		} else {
 			w.WriteHeader(http.StatusNoContent)
+
 		}
 	}
 }
