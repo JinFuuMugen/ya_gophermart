@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/dataaggregator"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
@@ -39,6 +40,10 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 		orders, err := dataaggregator.GetOrders(username, addr)
 		if err != nil {
 			logger.Errorf("error while getting orders: %v", err)
+
+			body, _ := io.ReadAll(r.Body) //TODO: remove
+			fmt.Println(string(body))
+
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
