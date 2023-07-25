@@ -6,7 +6,6 @@ import (
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	"github.com/go-resty/resty/v2"
-	"strconv"
 )
 
 func GetOrders(user string, addr string) ([]models.Order, error) {
@@ -16,7 +15,7 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 	}
 	r := resty.New()
 	for i, o := range orders {
-		resp, err := r.R().Get(addr + "/api/orders/" + strconv.Itoa(o.Number))
+		resp, err := r.R().Get(addr + "/api/orders/" + o.Number)
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}

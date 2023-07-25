@@ -235,7 +235,7 @@ func GetOrdersDB(user string) ([]models.Order, error) {
 		defer rows.Close()
 
 		for rows.Next() {
-			var number int
+			var number string
 			var date time.Time
 
 			err := rows.Scan(&number, &date)
