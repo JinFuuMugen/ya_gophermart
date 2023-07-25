@@ -6,8 +6,8 @@ type User struct {
 }
 
 type Order struct {
-	Dateadd string `json:"processed_at"`
-	Number  string `json:"order"`
-	Status  string `json:"status"`
-	Accrual int    `json:"accrual"`
+	Dateadd string  `json:"processed_at"`
+	Number  string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
 }
