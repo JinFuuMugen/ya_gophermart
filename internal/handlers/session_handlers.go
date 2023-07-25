@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	"github.com/dgrijalva/jwt-go"
-	"io"
 	"net/http"
 	"time"
 )
@@ -50,8 +48,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		body, _ := io.ReadAll(r.Body)
-		fmt.Println(string(body)) //todo: remove
 		next.ServeHTTP(w, r)
 	})
 }
