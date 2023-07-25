@@ -21,11 +21,13 @@ func main() {
 		log.Fatalf("cannot create logger: %s", err)
 	}
 
-	if cfg.DatabaseURI != "" {
-		err := database.InitDatabase(cfg.DatabaseURI)
-		if err != nil {
-			logger.Fatalf("cannot create database connection: %s", err)
-		}
+	if cfg.DatabaseURI == "" {
+		log.Fatalf("no database uri provided")
+	}
+
+	err = database.InitDatabase(cfg.DatabaseURI)
+	if err != nil {
+		logger.Fatalf("cannot create database connection: %s", err)
 	}
 
 	rout := chi.NewRouter()

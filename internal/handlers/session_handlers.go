@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	"github.com/dgrijalva/jwt-go"
@@ -53,13 +54,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodPost {
-		logger.Errorf("method not allowed")
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -68,11 +62,19 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: check if login is taken (in database)
+	isTaken, err := database.CheckLoginTaken(user.Login)
+	if isTaken {
+		logger.Errorf("login already taken")
+		http.Error(w, "Logging already taken", http.StatusConflict)
+		return
+	}
 
-	//http 409
-
-	//TODO: add user to database
+	err = database.StoreUser(user.Login, user.Password)
+	if err != nil {
+		logger.Errorf("error saving new user in database")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	token, err := generateAuthToken(user.Login)
 	fmt.Println(token)
@@ -107,12 +109,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		logger.Errorf("method not allowed")
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var credentials models.User
 
 	err := json.NewDecoder(r.Body).Decode(&credentials)
@@ -122,8 +118,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: check auth in database
-	// 401 (Unauthorized)
+	var validCred bool
+
+	validCred, err = database.UserAuth(credentials.Login, credentials.Password)
+
+	if err != nil {
+		logger.Errorf("error checking credentials")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+
+	if !validCred {
+		http.Error(w, "wrong credentials", http.StatusUnauthorized)
+		return
+	}
 
 	token, err := generateAuthToken(credentials.Login)
 	if err != nil {
