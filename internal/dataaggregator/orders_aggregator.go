@@ -20,12 +20,12 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
-		var orderData models.Order
+		orderData := make([]models.Order, 0)
 		if err := json.Unmarshal(resp.Body(), &orderData); err != nil {
 			return nil, fmt.Errorf("error parsing JSON: %w", err)
 		}
-		orders[i].Accrual = orderData.Accrual
-		orders[i].Status = orderData.Status
+		orders[i].Accrual = orderData[i].Accrual
+		orders[i].Status = orderData[i].Status
 	}
 	return orders, nil
 }
