@@ -23,7 +23,6 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
-		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
