@@ -62,12 +62,6 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 }
 
 func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		logger.Errorf("method not allowed")
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "text/plain" {
 		logger.Errorf("unsupported media type")
@@ -117,6 +111,22 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	username := claims["user"].(string)
 
+	var code int
+
+	code, err = database.CheckOrder(string(orderNumber), username)
+	if err != nil {
+		logger.Errorf("error while checking order in database")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+
+	switch code {
+	case 409:
+		http.Error(w, "This order was uploaded by another user", http.StatusConflict)
+		return
+	case 200:
+		http.Error(w, "This order was already uploaded by you", http.StatusOK)
+		return
+	}
 	err = database.StoreOrder(string(orderNumber), username)
 	if err != nil {
 		logger.Errorf("failed to store order")

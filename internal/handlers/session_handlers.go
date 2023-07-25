@@ -96,20 +96,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   3600,
 	}
 	http.SetCookie(w, &cookie)
-
-	response := struct {
-		Message string `json:"message"`
-	}{
-		Message: "User registered and authenticated successfully",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		logger.Errorf("internal error while encoding response")
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-	}
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {

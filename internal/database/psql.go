@@ -35,7 +35,7 @@ func InitDatabase(config string) error {
 	_, err = DB.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS orders (
 			number numeric UNIQUE,
-			username TEXT,
+			login TEXT,
 			uploaded TIMESTAMP
 		)
 	`)
@@ -44,6 +44,45 @@ func InitDatabase(config string) error {
 	}
 
 	return nil
+}
+
+func CheckOrder(orderNum string, user string) (int, error) {
+	errCh := make(chan error, 1)
+	codeCh := make(chan int, 1)
+
+	go func() {
+
+		rows, err := DB.Query("SELECT login FROM orders WHERE number = $1", orderNum)
+		if err != nil {
+			errCh <- fmt.Errorf("error checking order: %w", err)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var prevLogin string
+
+			err = rows.Scan(&prevLogin)
+			if err != nil {
+				errCh <- fmt.Errorf("error scanning rows: %w", err)
+			}
+			if prevLogin == user {
+				codeCh <- 200
+			} else if prevLogin != user && prevLogin != "" {
+				codeCh <- 409
+			}
+			codeCh <- 202
+		}
+
+		errCh <- nil
+	}()
+
+	select {
+	case err := <-errCh:
+		return 0, err
+	case code := <-codeCh:
+		return code, nil
+	}
 }
 
 func StoreOrder(orderNum string, user string) error {
