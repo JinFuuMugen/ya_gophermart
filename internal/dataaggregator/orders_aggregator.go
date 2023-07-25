@@ -23,13 +23,13 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
 
+		body, err := io.ReadAll(resp.RawBody())
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body: %w", err)
+		}
+
 		switch resp.StatusCode() {
 		case http.StatusOK:
-			body, err := io.ReadAll(resp.RawBody())
-			if err != nil {
-				return nil, fmt.Errorf("error reading response body: %w", err)
-			}
-
 			var orderData models.Order
 			if err := json.Unmarshal(body, &orderData); err != nil {
 				return nil, fmt.Errorf("error parsing JSON: %w", err)
