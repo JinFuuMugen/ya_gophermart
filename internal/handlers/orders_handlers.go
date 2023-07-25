@@ -48,20 +48,15 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 			return
 		}
 
-		if len(orders) > 0 {
-			ordersJSON, err := json.Marshal(orders)
-			if err != nil {
-				logger.Errorf("error while marshaling orders to JSON: %v", err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(ordersJSON)
-		} else {
-			w.WriteHeader(http.StatusNoContent)
-
+		ordersJSON, err := json.Marshal(orders)
+		if err != nil {
+			logger.Errorf("error while marshaling orders to JSON: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(ordersJSON)
 	}
 }
 
