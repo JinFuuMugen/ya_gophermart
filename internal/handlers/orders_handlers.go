@@ -15,9 +15,8 @@ import (
 func GetOrdersHandler(addr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		b, _ := r.GetBody()        //todo: remove
-		body, _ := io.ReadAll(b)   //todo:remove
-		logger.Warnf(string(body)) //todo:remove
+		body, _ := io.ReadAll(r.Body) //todo:remove
+		logger.Warnf(string(body))    //todo:remove
 
 		cookie, err := r.Cookie("auth_token")
 		if err != nil {
