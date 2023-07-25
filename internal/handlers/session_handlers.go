@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
@@ -63,6 +62,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isTaken, err := database.CheckLoginTaken(user.Login)
+	if err != nil {
+		logger.Errorf("error checking login in database")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	if isTaken {
 		logger.Errorf("login already taken")
 		http.Error(w, "Logging already taken", http.StatusConflict)
@@ -77,7 +81,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := generateAuthToken(user.Login)
-	fmt.Println(token)
+
 	if err != nil {
 		logger.Errorf("failed to generate auth token: %v", err)
 		http.Error(w, "Internal error", http.StatusInternalServerError)
@@ -148,17 +152,5 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, &cookie)
 
-	response := struct {
-		Message string `json:"message"`
-	}{
-		Message: "User authenticated successfully",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		logger.Errorf("internal error while encoding response")
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-	}
 }

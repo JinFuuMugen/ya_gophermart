@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"time"
@@ -58,7 +59,7 @@ func StoreOrder(orderNum string, user string) error {
 			errCh <- fmt.Errorf("error parsing datetime: %w", err)
 			return
 		}
-		_, err = DB.ExecContext(ctx, "INSERT INTO orders (number, username, uploaded) VALUES ($1, $2, $3);", orderNum, user, t) //TODO: might need changes
+		_, err = DB.ExecContext(ctx, "INSERT INTO orders (number, login, uploaded) VALUES ($1, $2, $3);", orderNum, user, t) //TODO: might need changes
 		if err != nil {
 			errCh <- fmt.Errorf("error storing order in the database: %w", err)
 			return
@@ -74,12 +75,6 @@ func StoreOrder(orderNum string, user string) error {
 		return err
 	}
 }
-
-//func GetOrders(user string) error {
-//
-//	DB.ExecContext(ctx, "SELECT * FROM orders WHERE user = $uname;", user) //TODO: might need changes
-//
-//}
 
 func StoreUser(login string, password string) error {
 
@@ -113,7 +108,7 @@ func UserAuth(authLogin string, authPass string) (bool, error) {
 
 	go func() {
 
-		rows, err := DB.Query("SELECT * FROM users WHERE login = $1", authLogin) //TODO: might need changes
+		rows, err := DB.Query("SELECT * FROM users WHERE login = $1", authLogin)
 		if err != nil {
 			errCh <- fmt.Errorf("error checking user: %w", err)
 			return
@@ -126,7 +121,7 @@ func UserAuth(authLogin string, authPass string) (bool, error) {
 
 			err = rows.Scan(&login, &pass)
 			if err != nil {
-				errCh <- err
+				errCh <- fmt.Errorf("error scanning rows: %w", err)
 			}
 			if login == authLogin && pass == authPass {
 				boolCh <- true
@@ -153,7 +148,7 @@ func CheckLoginTaken(user string) (bool, error) {
 
 	go func() {
 
-		rows, err := DB.Query("SELECT COUNT(*) FROM users WHERE login = $1", user) //TODO: might need changes
+		rows, err := DB.Query("SELECT COUNT(*) FROM users WHERE login = $1", user)
 		if err != nil {
 			errCh <- fmt.Errorf("error checking user: %w", err)
 			return
@@ -165,7 +160,7 @@ func CheckLoginTaken(user string) (bool, error) {
 
 			err = rows.Scan(&cnt)
 			if err != nil {
-				errCh <- err
+				errCh <- fmt.Errorf("error scanning rows: %w", err)
 			}
 			if cnt == 1 {
 				boolCh <- true
@@ -182,5 +177,42 @@ func CheckLoginTaken(user string) (bool, error) {
 		return false, err
 	case flag := <-boolCh:
 		return flag, nil
+	}
+}
+
+func GetOrdersDB(user string) ([]models.Order, error) {
+	errCh := make(chan error, 1)
+	ordCh := make(chan []models.Order, 1)
+
+	go func() {
+
+		orders := make([]models.Order, 0)
+
+		rows, err := DB.Query("SELECT number, uploaded FROM orders WHERE login = $1 ORDER BY uploaded", user) //TODO: might need changes
+		if err != nil {
+			errCh <- fmt.Errorf("error checking user: %w", err)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var number int
+			var date time.Time
+
+			err := rows.Scan(&number, &date)
+			if err != nil {
+				errCh <- fmt.Errorf("error scanning rows: %w", err)
+			}
+			orders = append(orders, models.Order{Number: number, Dateadd: date.Format(time.RFC3339)})
+		}
+		ordCh <- orders
+		errCh <- nil
+	}()
+
+	select {
+	case err := <-errCh:
+		return nil, err
+	case ord := <-ordCh:
+		return ord, nil
 	}
 }
