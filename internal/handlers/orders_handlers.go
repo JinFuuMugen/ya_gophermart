@@ -38,7 +38,7 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 
 		orders, err := dataaggregator.GetOrders(username, addr)
 		if err != nil {
-			logger.Errorf("error while getting orders: %w", err)
+			logger.Errorf("error while getting orders: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -50,7 +50,7 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 
 		ordersJSON, err := json.Marshal(orders)
 		if err != nil {
-			logger.Errorf("error while marshaling orders to JSON: %w", err)
+			logger.Errorf("error while marshaling orders to JSON: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -71,21 +71,19 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	orderNumber, err := io.ReadAll(r.Body)
 	if err != nil {
-		logger.Errorf("failed to read request body")
+		logger.Errorf("failed to read request body: %v", err)
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
 
 	isValidOrderNumber := func(orderNumber string) bool {
-
 		orderNumber = strings.ReplaceAll(orderNumber, " ", "")
-
 		_, err := strconv.ParseInt(orderNumber, 10, 64)
 		return err == nil
 	}
 
 	if !isValidOrderNumber(string(orderNumber)) {
-		logger.Errorf("failed to read request body")
+		logger.Errorf("invalid order number format")
 		http.Error(w, "Invalid order number format", http.StatusUnprocessableEntity)
 		return
 	}
@@ -115,7 +113,7 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 
 	code, err = database.CheckOrder(string(orderNumber), username)
 	if err != nil {
-		logger.Errorf("error while checking order in database")
+		logger.Errorf("error while checking order in database: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 
@@ -129,7 +127,7 @@ func PostOrdersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = database.StoreOrder(string(orderNumber), username)
 	if err != nil {
-		logger.Errorf("failed to store order")
+		logger.Errorf("failed to store order: %v", err)
 		http.Error(w, "Failed to save order number", http.StatusInternalServerError)
 		return
 	}
