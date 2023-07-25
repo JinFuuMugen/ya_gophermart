@@ -73,6 +73,10 @@ func CheckOrder(orderNum string, user string) (int, error) {
 			}
 			codeCh <- 202
 		}
+		if err := rows.Err(); err != nil {
+			errCh <- fmt.Errorf("error scanning rows: %w", err)
+			return
+		}
 
 		errCh <- nil
 	}()
@@ -169,6 +173,11 @@ func UserAuth(authLogin string, authPass string) (bool, error) {
 			boolCh <- false
 		}
 
+		if err := rows.Err(); err != nil {
+			errCh <- fmt.Errorf("error scanning rows: %w", err)
+			return
+		}
+
 		errCh <- nil
 	}()
 
@@ -208,6 +217,11 @@ func CheckLoginTaken(user string) (bool, error) {
 			boolCh <- false
 		}
 
+		if err := rows.Err(); err != nil {
+			errCh <- fmt.Errorf("error scanning rows: %w", err)
+			return
+		}
+
 		errCh <- nil
 	}()
 
@@ -244,6 +258,12 @@ func GetOrdersDB(user string) ([]models.Order, error) {
 			}
 			orders = append(orders, models.Order{Number: number, Dateadd: date.Format(time.RFC3339)})
 		}
+
+		if err := rows.Err(); err != nil {
+			errCh <- fmt.Errorf("error scanning rows: %w", err)
+			return
+		}
+
 		ordCh <- orders
 		errCh <- nil
 	}()
