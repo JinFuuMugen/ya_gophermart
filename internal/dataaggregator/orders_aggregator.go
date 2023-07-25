@@ -24,9 +24,12 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		if err := json.Unmarshal(resp.Body(), &orderData); err != nil {
 			return nil, fmt.Errorf("error parsing JSON: %w", err)
 		}
-		fmt.Println(orderData) //TODO:remove
 
+		orderData.Dateadd = o.Dateadd
 		accuralOrder = append(accuralOrder, orderData)
+
 	}
-	return orders, nil
+	fmt.Println(accuralOrder) //TODO:remove
+
+	return accuralOrder, nil
 }
