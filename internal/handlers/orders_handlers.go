@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/dataaggregator"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/logger"
@@ -17,7 +16,7 @@ func GetOrdersHandler(addr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		body, _ := io.ReadAll(r.Body) //todo:remove
-		fmt.Println(string(body))     //todo:remove
+		logger.Warnf(string(body))    //todo:remove
 
 		cookie, err := r.Cookie("auth_token")
 		if err != nil {
