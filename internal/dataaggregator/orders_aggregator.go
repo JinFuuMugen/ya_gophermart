@@ -6,6 +6,7 @@ import (
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/database"
 	"github.com/JinFuuMugen/ya_gophermart.git/internal/models"
 	"github.com/go-resty/resty/v2"
+	"io"
 )
 
 func GetOrders(user string, addr string) ([]models.Order, error) {
@@ -20,11 +21,16 @@ func GetOrders(user string, addr string) ([]models.Order, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error executing accural request: %w", err)
 		}
+
 		var orderData models.Order
 
-		fmt.Println(string(resp.Body())) //todo: remove
+		body, err := io.ReadAll(resp.RawBody())
+		if err != nil {
+			return nil, fmt.Errorf("error reading response body: %w", err)
+		}
+		fmt.Println(body) //todo: remove
 
-		if err := json.Unmarshal(resp.Body(), &orderData); err != nil {
+		if err := json.Unmarshal(body, &orderData); err != nil {
 			return nil, fmt.Errorf("error parsing JSON: %w", err)
 		}
 
