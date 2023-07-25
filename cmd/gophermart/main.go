@@ -41,11 +41,11 @@ func main() {
 		r.Post("/login", handlers.LoginHandler)       //TODO: make this handler
 
 		r.With(handlers.AuthMiddleware).Group(func(r chi.Router) {
-			r.Post("/orders", handlers.PostOrdersHandler)             //TODO: make this handler
-			r.Get("/orders", handlers.GetOrdersHandler(cfg.Addr))     //TODO: make this handler
-			r.Get("/balance", handlers.GetBalanceHandler)             //TODO: make this handler
-			r.Post("/balance/withdraw", handlers.PostWithdrawHandler) //TODO: make this handler
-			r.Get("/withdrawals", handlers.GetWithdrawalsHandler)     //TODO: make this handler
+			r.Post("/orders", handlers.PostOrdersHandler)                   //TODO: make this handler
+			r.Get("/orders", handlers.GetOrdersHandler(cfg.AccrualAddress)) //TODO: make this handler
+			r.Get("/balance", handlers.GetBalanceHandler)                   //TODO: make this handler
+			r.Post("/balance/withdraw", handlers.PostWithdrawHandler)       //TODO: make this handler
+			r.Get("/withdrawals", handlers.GetWithdrawalsHandler)           //TODO: make this handler
 		})
 	})
 
